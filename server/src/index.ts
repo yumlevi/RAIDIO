@@ -32,10 +32,12 @@ if (process.env.TRUST_PROXY === '1' || process.env.NODE_ENV === 'production') {
   app.set('trust proxy', 1);
 }
 
-// Security headers
+// Security headers — disable HSTS and COOP for plain HTTP / LAN access
 app.use(helmet({
   crossOriginResourcePolicy: { policy: 'cross-origin' },
   crossOriginEmbedderPolicy: false,
+  crossOriginOpenerPolicy: false,
+  strictTransportSecurity: false,
   contentSecurityPolicy: {
     directives: {
       defaultSrc: ["'self'"],
