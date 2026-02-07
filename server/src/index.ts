@@ -44,16 +44,7 @@ app.use(helmet({
 
 // Middleware
 app.use(cors({
-  origin: (origin, callback) => {
-    if (!origin) return callback(null, true);
-    if (config.nodeEnv === 'development') {
-      return callback(null, true);
-    }
-    if (origin === config.frontendUrl) {
-      return callback(null, true);
-    }
-    callback(new Error('Not allowed by CORS'));
-  },
+  origin: true,
   credentials: true,
 }));
 
