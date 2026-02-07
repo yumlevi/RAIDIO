@@ -26,6 +26,9 @@ RUN cd server && npm run build
 # ---- Stage 2: Runtime ----
 FROM node:20-alpine AS runtime
 
+# ffmpeg for radio audio streaming (crossfade, format conversion)
+RUN apk add --no-cache ffmpeg
+
 WORKDIR /app
 
 # Copy built frontend
