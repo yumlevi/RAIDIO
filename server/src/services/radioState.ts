@@ -3,6 +3,8 @@ import { config } from '../config/index.js';
 import { generateMusicViaAPI, getJobStatus, downloadAudioToBuffer, setMusicProviderUrl } from './music/index.js';
 import { getStorageProvider } from './storage/factory.js';
 import { generateUUID } from '../db/sqlite.js';
+// Import migrate first to ensure tables exist before RadioManager queries them
+import '../db/migrate.js';
 import { db } from '../db/pool.js';
 import { generateWithLLM, initLLMProvider, type LLMSongData } from './llm/index.js';
 import { processAudioWithSettings } from './audioProcessor.js';

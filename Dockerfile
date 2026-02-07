@@ -32,6 +32,7 @@ COPY --from=build /app/dist ./dist
 COPY --from=build /app/server/dist ./server/dist
 COPY --from=build /app/server/node_modules ./server/node_modules
 COPY --from=build /app/server/package.json ./server/package.json
+COPY --from=build /app/server/prompts ./server/prompts
 
 # Create directories for runtime data (will be volume-mounted)
 RUN mkdir -p server/data server/public/audio

@@ -49,7 +49,6 @@ app.use(helmet({
       scriptSrcAttr: ["'none'"],
       connectSrc: ["'self'", 'https://esm.sh', 'ws:', 'wss:'],
       styleSrc: ["'self'", "'unsafe-inline'", 'https://fonts.googleapis.com'],
-      upgradeInsecureRequests: [],
     },
   },
 }));
