@@ -1,0 +1,61 @@
+services:
+  raidio:
+    build: .
+    container_name: raidio
+    restart: unless-stopped
+    ports:
+      - "3001:3001"
+    environment:
+      - NODE_ENV=production
+      - PORT=3001
+      - TRUST_PROXY=1
+      # ACE-Step API — point to host machine or separate container
+      # Use host.docker.internal on Docker Desktop, or the host's LAN IP on Linux
+      - ACESTEP_API_URL=http://host.docker.internal:39871
+      # Database + audio paths (inside container, backed by volumes)
+      - DATABASE_PATH=./data/acestep.db
+      - AUDIO_DIR=./public/audio
+      # Frontend URL (same origin in production)
+      - FRONTEND_URL=http://localhost:3001
+      # Radio owner secret — change this!
+      - RADIO_OWNER_SECRET=change-me-in-production
+      # Optional: Claude API key for AI prompt enhancement
+      # - CLAUDE_API_KEY=sk-ant-...
+      # Optional: vLLM / OpenAI-compatible endpoint
+      # - VLLM_ENDPOINT_URL=http://host.docker.internal:8000/v1
+      # - VLLM_MODEL=your-model-name
+    volumes:
+      # Persist database across restarts
+      - raidio-data:/app/server/data
+      # Persist generated audio files
+      - raidio-audio:/app/server/public/audio
+    # healthcheck:
+    #   test: ["CMD", "wget", "--spider", "-q", "http://localhost:3001/health"]
+    #   interval: 30s
+    #   timeout: 5s
+    #   retries: 3
+    #   start_period: 10s
+
+  # ---- ACE-Step API (uncomment and configure) ----
+  # ACE-Step requires GPU access, Python, and ~3GB model weights.
+  # Most users will run it on the host or a separate GPU machine.
+  #
+  # acestep:
+  #   image: your-acestep-image:latest
+  #   container_name: acestep
+  #   restart: unless-stopped
+  #   ports:
+  #     - "39871:39871"
+  #   deploy:
+  #     resources:
+  #       reservations:
+  #         devices:
+  #           - driver: nvidia
+  #             count: 1
+  #             capabilities: [gpu]
+  #   volumes:
+  #     - ./models/ACE-Step-1.5:/app/models/ACE-Step-1.5
+
+volumes:
+  raidio-data:
+  raidio-audio:

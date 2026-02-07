@@ -1,0 +1,94 @@
+# Dependencies
+node_modules/
+server/node_modules/
+
+# Claude Code project data
+.claude/
+
+# Database backups
+server/data/*.bak
+
+# Build outputs
+dist/
+dist-ssr/
+build/
+*.tsbuildinfo
+
+# Environment files
+.env
+.env.local
+.env.*.local
+*.local
+server/.env
+
+# Database (SQLite)
+server/data/*.db
+server/data/*.db-shm
+server/data/*.db-wal
+!server/data/.gitkeep
+
+# Generated audio files
+server/public/audio/*.mp3
+server/public/audio/*.flac
+server/public/audio/*.wav
+server/public/audio/*/
+!server/public/audio/.gitkeep
+
+
+# Logs
+logs/
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+lerna-debug.log*
+
+# Editor/IDE
+.vscode/*
+!.vscode/extensions.json
+.idea/
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?
+*.swp
+*.swo
+*~
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Vite cache
+.vite/
+
+# Cache
+.cache/
+*.cache
+
+# Test coverage
+coverage/
+
+# Temporary files
+tmp/
+temp/
+*.tmp
+
+
+# Python
+__pycache__/
+*.py[cod]
+.venv/
+
+# Models (ACE-Step clone target)
+models/
+
+# Misc
+ComfyUI/
+comfyui/
+
+
+# Script logs
+logs/

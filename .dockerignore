@@ -1,0 +1,57 @@
+# Dependencies (will be installed fresh in container)
+node_modules/
+server/node_modules/
+
+# Build outputs (will be built in container)
+dist/
+server/dist/
+
+# Models (too large, ACE-Step runs externally)
+models/
+
+# Environment files (use docker-compose env vars instead)
+.env
+.env.local
+.env.*.local
+server/.env
+
+# Runtime data (mounted as volumes)
+server/data/
+server/public/audio/
+
+# Git
+.git/
+.gitignore
+
+# IDE / Editor
+.vscode/
+.idea/
+
+# Claude Code
+.claude/
+
+# Logs
+logs/
+*.log
+
+# Documentation
+*.md
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Python / ACE-Step local dev
+__pycache__/
+*.py[cod]
+.venv/
+
+# Misc
+ComfyUI/
+comfyui/
+wavacity-editor/
+audiomass-editor/
+coverage/
+tmp/
+temp/
+*.tmp
