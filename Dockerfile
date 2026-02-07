@@ -1,6 +1,9 @@
 # ---- Stage 1: Build ----
 FROM node:20-alpine AS build
 
+# Build tools for native modules (better-sqlite3)
+RUN apk add --no-cache python3 make g++
+
 WORKDIR /app
 
 # Install frontend dependencies
