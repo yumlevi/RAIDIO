@@ -32,28 +32,14 @@ if (process.env.TRUST_PROXY === '1' || process.env.NODE_ENV === 'production') {
   app.set('trust proxy', 1);
 }
 
-// Security headers — disable HSTS and COOP for plain HTTP / LAN access
+// Security headers — minimal for LAN / plain HTTP compatibility
 app.use(helmet({
-  crossOriginResourcePolicy: { policy: 'cross-origin' },
+  contentSecurityPolicy: false,
+  strictTransportSecurity: false,
   crossOriginEmbedderPolicy: false,
   crossOriginOpenerPolicy: false,
-  strictTransportSecurity: false,
-  contentSecurityPolicy: {
-    directives: {
-      defaultSrc: ["'self'"],
-      baseUri: ["'self'"],
-      fontSrc: ["'self'", 'https://fonts.gstatic.com', 'https:', 'data:'],
-      formAction: ["'self'"],
-      frameAncestors: ["'self'"],
-      imgSrc: ["'self'", 'data:', 'https:'],
-      objectSrc: ["'none'"],
-      scriptSrc: ["'self'", "'unsafe-inline'", 'https://cdn.tailwindcss.com', 'https://esm.sh'],
-      scriptSrcAttr: ["'none'"],
-      connectSrc: ["'self'", 'https://esm.sh', 'ws:', 'wss:'],
-      styleSrc: ["'self'", "'unsafe-inline'", 'https://fonts.googleapis.com'],
-      upgradeInsecureRequests: null,
-    },
-  },
+  originAgentCluster: false,
+  crossOriginResourcePolicy: { policy: 'cross-origin' },
 }));
 
 // Middleware
