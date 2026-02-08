@@ -257,9 +257,8 @@ router.post('/', authMiddleware, async (req: AuthenticatedRequest, res: Response
     const radioSettings = radioManager.getSettings();
     const useLLM = radioSettings.useLLM;
 
-    if (useLLM) {
-      radioManager.cancelPreGeneration();
-    }
+    // Cancel any pending/in-flight auto-generation when a user request starts
+    radioManager.cancelAutoGeneration();
 
     console.log('[Generate] Request received:', {
       instructMode,

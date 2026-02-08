@@ -495,6 +495,14 @@ class RadioManager {
   addToQueue(song: RadioSong, genParams?: AutoGenParams, isUserGenerated: boolean = false): void {
     console.log('[Radio] Adding song to queue:', song.title, isUserGenerated ? '(user)' : '(auto-dj)');
 
+    // Reject duplicate audioUrls (safety net for race conditions)
+    const isDuplicate = this.state.queue.some(s => s.audioUrl === song.audioUrl)
+      || this.state.currentSong?.audioUrl === song.audioUrl;
+    if (isDuplicate) {
+      console.log('[Radio] Rejecting duplicate song (same audioUrl):', song.title);
+      return;
+    }
+
     // Attach genParams to the song for the details popup
     if (genParams) {
       song.genParams = genParams;
@@ -1006,13 +1014,29 @@ class RadioManager {
       console.log('[Radio] Job started:', jobId);
 
       // Poll for completion
+      let resolved = false;
       const pollInterval = setInterval(async () => {
+        if (resolved) return;
         try {
           const status = await getJobStatus(jobId);
           console.log('[Radio] Job status:', status.status);
 
           if (status.status === 'succeeded' && status.result) {
+            if (resolved) return; // Double-check after await
+            resolved = true;
             clearInterval(pollInterval);
+
+            // Check if a user request made this generation stale
+            if (this.state.autoGenStale) {
+              console.log('[Radio] Auto-generation completed but marked stale — discarding');
+              this.state.isAutoGenerating = false;
+              this.state.autoGenStale = false;
+              this.broadcastToAll({
+                type: 'auto-generating',
+                payload: { isGenerating: false },
+              } as any);
+              return;
+            }
 
             const audioUrls = status.result.audioUrls?.filter((url: string) =>
               url.endsWith('.mp3') || url.endsWith('.flac')
@@ -1085,6 +1109,7 @@ class RadioManager {
 
               console.log(`[Radio] Added ${songsAdded} songs to queue`);
               this.state.isAutoGenerating = false;
+              this.state.autoGenStale = false;
 
               // Only check for more generation if we still need songs
               const minQ = this.state.settings.autoDjMinQueueSize ?? 1;
@@ -1094,6 +1119,7 @@ class RadioManager {
             } else {
               console.error('[Radio] No audio URLs in result');
               this.state.isAutoGenerating = false;
+              this.state.autoGenStale = false;
             }
 
             this.broadcastToAll({
@@ -1102,9 +1128,12 @@ class RadioManager {
             } as any);
 
           } else if (status.status === 'failed') {
+            if (resolved) return;
+            resolved = true;
             clearInterval(pollInterval);
             console.error('[Radio] Auto-generation failed:', status.error);
             this.state.isAutoGenerating = false;
+            this.state.autoGenStale = false;
 
             this.broadcastToAll({
               type: 'auto-generating',
@@ -1267,6 +1296,17 @@ class RadioManager {
       clearTimeout(this.preGenerateTimeout);
       this.preGenerateTimeout = null;
       console.log('[Radio] Cancelled pre-generation (user request started)');
+    }
+  }
+
+  /**
+   * Cancel auto-generation: clears pre-gen timeout AND marks in-flight auto-gen as stale
+   */
+  cancelAutoGeneration(): void {
+    this.cancelPreGeneration();
+    if (this.state.isAutoGenerating) {
+      this.state.autoGenStale = true;
+      console.log('[Radio] Marked auto-generation as stale (user request started)');
     }
   }
 

@@ -392,11 +392,15 @@ export default function App() {
       }, radioUsername);
 
       // Poll for completion
+      let jobProcessed = false;
       const pollInterval = setInterval(async () => {
+        if (jobProcessed) return;
         try {
           const status = await generateApi.getStatus(job.jobId, radioUsername);
 
           if (status.status === 'succeeded' && status.result) {
+            if (jobProcessed) return; // Double-check after await
+            jobProcessed = true;
             cleanupJob(job.jobId, tempId);
 
             // Add completed song to radio queue
@@ -440,11 +444,15 @@ export default function App() {
               }
             }
           } else if (status.status === 'failed') {
+            if (jobProcessed) return;
+            jobProcessed = true;
             cleanupJob(job.jobId, tempId);
             console.error(`Job ${job.jobId} failed:`, status.error);
             showToast(`Generation failed: ${status.error || 'Unknown error'}`, 'error');
           }
         } catch (pollError) {
+          if (jobProcessed) return;
+          jobProcessed = true;
           console.error(`Polling error for job ${job.jobId}:`, pollError);
           cleanupJob(job.jobId, tempId);
         }
