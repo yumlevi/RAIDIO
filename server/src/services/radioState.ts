@@ -252,6 +252,11 @@ class RadioManager {
 
         // Initialize LLM provider from saved settings
         this.initLLMFromSettings();
+
+        // Apply saved music provider URL to the provider
+        if (this.state.settings.musicProviderUrl) {
+          setMusicProviderUrl(this.state.settings.musicProviderUrl);
+        }
       }
     } catch (error) {
       console.error('[Radio] Failed to load settings from database:', error);
