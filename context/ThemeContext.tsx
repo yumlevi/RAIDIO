@@ -139,7 +139,7 @@ const DEFAULT_DYNAMIC = { main: '#3b82f6', light: '#60a5fa', dark: '#2563eb' };
 export function ThemeProvider({ children }: ThemeProviderProps) {
   const [accent, setAccentState] = useState<AccentColor>(() => {
     const stored = localStorage.getItem('theme_accent');
-    return (stored as AccentColor) || 'blue';
+    return (stored as AccentColor) || 'dynamic';
   });
 
   const [nowPlayingScale, setNowPlayingScaleState] = useState<NowPlayingScale>(() => {

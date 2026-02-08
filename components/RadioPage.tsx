@@ -115,7 +115,7 @@ export const RadioPage: React.FC<RadioPageProps> = ({
     return parseFloat(localStorage.getItem('radio_visualizer_opacity') || '1');
   });
   const [visualizerColorScheme, setVisualizerColorScheme] = useState<ColorScheme>(() => {
-    return (localStorage.getItem('radio_visualizer_color') as ColorScheme) || 'album';
+    return (localStorage.getItem('radio_visualizer_color') as ColorScheme) || 'dynamic';
   });
   const [visualizerShape, setVisualizerShape] = useState<VisualizerShape>(() => {
     return (localStorage.getItem('radio_visualizer_shape') as VisualizerShape) || 'grid';
