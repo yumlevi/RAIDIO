@@ -207,28 +207,99 @@ export const RadioPage: React.FC<RadioPageProps> = ({
     }
   }, [accent, radio.currentSong?.id, radio.currentSong?.coverUrl, setDynamicPalette]);
 
-  // Initialize audio element for stream and autoplay
+  // Initialize audio element for stream with auto-reconnection
   useEffect(() => {
-    audioRef.current = new Audio(streamUrl);
-    audioRef.current.volume = volume;
+    const audio = new Audio(streamUrl);
+    audio.volume = volume;
+    audioRef.current = audio;
+
+    let reconnectTimer: ReturnType<typeof setTimeout> | null = null;
+    let reconnectAttempts = 0;
+    let intentionalPause = false;
+
+    const reconnect = () => {
+      if (intentionalPause || !audioRef.current) return;
+      // Exponential backoff: 1s, 2s, 4s, 8s... capped at 15s
+      const delay = Math.min(1000 * Math.pow(2, reconnectAttempts), 15000);
+      reconnectAttempts++;
+      console.log(`[Radio] Reconnecting in ${delay}ms (attempt ${reconnectAttempts})...`);
+      reconnectTimer = setTimeout(() => {
+        if (!audioRef.current || intentionalPause) return;
+        // Reset source to force a fresh HTTP connection
+        audioRef.current.src = streamUrl;
+        audioRef.current.play()
+          .then(() => {
+            console.log('[Radio] Reconnected successfully');
+            reconnectAttempts = 0;
+            setStreamPlaying(true);
+          })
+          .catch(() => {
+            // Still failing, try again
+            reconnect();
+          });
+      }, delay);
+    };
+
+    const onError = () => {
+      if (intentionalPause) return;
+      console.log('[Radio] Stream error, will reconnect');
+      reconnect();
+    };
+
+    const onStalled = () => {
+      if (intentionalPause) return;
+      console.log('[Radio] Stream stalled, will reconnect');
+      // Wait a moment to see if it recovers on its own
+      reconnectTimer = setTimeout(() => {
+        if (!audioRef.current || intentionalPause) return;
+        // Check if still stalled (no progress)
+        if (audioRef.current.readyState < 3) {
+          console.log('[Radio] Still stalled, reconnecting');
+          audioRef.current.src = streamUrl;
+          audioRef.current.play().catch(() => reconnect());
+        }
+      }, 5000);
+    };
+
+    const onEnded = () => {
+      if (intentionalPause) return;
+      // Live streams shouldn't end — if they do, reconnect
+      console.log('[Radio] Stream ended unexpectedly, reconnecting');
+      reconnect();
+    };
+
+    const onPlaying = () => {
+      reconnectAttempts = 0;
+    };
+
+    audio.addEventListener('error', onError);
+    audio.addEventListener('stalled', onStalled);
+    audio.addEventListener('ended', onEnded);
+    audio.addEventListener('playing', onPlaying);
 
     // Autoplay the stream
-    audioRef.current.play()
+    audio.play()
       .then(() => {
         setStreamPlaying(true);
         console.log('[Radio] Stream autoplay started');
       })
       .catch(err => {
         console.log('[Radio] Autoplay blocked, user interaction required:', err.message);
-        // Autoplay was blocked - user will need to click play
         setStreamPlaying(false);
       });
 
+    // Expose intentionalPause flag for toggle to use
+    (audio as any)._setIntentionalPause = (v: boolean) => { intentionalPause = v; };
+
     return () => {
-      if (audioRef.current) {
-        audioRef.current.pause();
-        audioRef.current.src = '';
-      }
+      intentionalPause = true;
+      if (reconnectTimer) clearTimeout(reconnectTimer);
+      audio.removeEventListener('error', onError);
+      audio.removeEventListener('stalled', onStalled);
+      audio.removeEventListener('ended', onEnded);
+      audio.removeEventListener('playing', onPlaying);
+      audio.pause();
+      audio.src = '';
     };
   }, []);
 
@@ -369,9 +440,11 @@ export const RadioPage: React.FC<RadioPageProps> = ({
     if (!audioRef.current) return;
 
     if (streamPlaying) {
+      (audioRef.current as any)._setIntentionalPause?.(true);
       audioRef.current.pause();
       setStreamPlaying(false);
     } else {
+      (audioRef.current as any)._setIntentionalPause?.(false);
       // Reload stream to get current position
       audioRef.current.src = streamUrl;
       audioRef.current.play()
